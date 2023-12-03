@@ -1,0 +1,23 @@
+version: "3.4"
+
+services: 
+  seamless-streaming:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    volumes: 
+      - /home/zz/MLOPS/Applications/seamlessm4t/models:/home/user/app/seamless_server/models/Seamless
+      -  /home/zz/MLOPS/Applications/seamlessm4t/models/vad_s2st_sc_main.yaml:/home/user/app/seamless_server/models/SeamlessStreaming/vad_s2st_sc_main.yaml
+
+    environment:
+      - SEAMLESS_MODEL_PATH=/home/zz/MLOPS/Applications/seamlessm4t/models
+    ports:
+      - "7860:7860"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              capabilities: [gpu]
+              device_ids: ['0']
+    container_name: seamless-streaming
