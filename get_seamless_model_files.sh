@@ -16,6 +16,40 @@ download_model() {
     fi
 }
 
+# Function to read YAML file and download models
+download_models_from_yaml() {
+    local yaml_file=$1
+
+    # Get the number of model entries
+    local num_entries=$(yq e '.model_files | length' "$yaml_file")
+    # Read ignore folders from the YAML file
+    local ignore_folders=($(yq e '.ignore_folders[]' "$yaml_file"))
+
+    echo "Number of Files: $num_entries"
+
+    # Download each model, skipping ignored folders
+    for ((i = 0; i < num_entries; i++)); do
+        local url=$(yq e ".model_files[$i].url" "$yaml_file")
+        local folder=$(yq e ".model_files[$i].folder" "$yaml_file")
+
+        # Check if the folder is null or not set
+        if [[ -z "$folder" || "$folder" == "null" ]]; then
+            echo "Error: Folder name for URL $url is not set in the YAML file."
+            continue
+        fi
+        
+        # Check if the folder is in the ignore list
+        if [[ " ${ignore_folders[*]} " =~ " ${folder} " ]]; then
+            echo "Skipping download for $folder as it is in the ignore list."
+            continue
+        fi
+
+        download_model "$url" "$folder"
+    done
+}
+
+
+
 # Function to extract and place signed up models
 extract_signed_up_models() {
     local tar_file=$1
@@ -32,35 +66,45 @@ extract_signed_up_models() {
     tar -xvf "$tar_file" -C "models/vocoder_pretssel" --strip-components=1 SeamlessExpressive/pretssel_melhifigan_wm.pt
 }
 
+
+# Initialize variables for argument values
+model_yaml=""
+model_tar=""
+
+# Function to print usage
+print_usage() {
+    echo "Usage: $0 --model_yaml path/to/model_spec.yaml [--model_tar path/to/SeamlessExpressive.tar.tar]"
+}
+
+# Parse command-line arguments
+while [[ "$#" -gt 0 ]]; do
+    case $1 in
+        --model_yaml) model_yaml="$2"; shift ;;
+        --model_tar) model_tar="$2"; shift ;;
+        *) echo "Unknown parameter passed: $1"; print_usage; exit 1 ;;
+    esac
+    shift
+done
+
+# Check if model_spec was provided
+if [[ -z "$model_yaml" ]]; then
+    echo "Error: --model_yaml is required."
+    print_usage
+    exit 1
+fi
+
+
 # Base directory for models
 mkdir -p models
 
-# Downloading the model files
-download_model "https://dl.fbaipublicfiles.com/seamless/datasets/mexpresso_text/mexpresso_text.tar" "memexpresso_text"
-download_model "https://dl.fbaipublicfiles.com/nllb/NLLB-200_TWL/nllb-200_twl.zip" "mintox"
-download_model "https://huggingface.co/facebook/seamless-m4t-medium/resolve/main/tokenizer.model" "mintox"
-download_model "https://huggingface.co/facebook/seamless-streaming/resolve/main/spm_char_lang38_tc.model" "nar_t2u_aligner"
-download_model "https://dl.fbaipublicfiles.com/seamless/models/unity2_aligner.pt" "nar_t2u_aligner"
-download_model "https://huggingface.co/facebook/seamless-m4t-large/resolve/main/multitask_unity_large.pt" "seamlessM4T_large"
-download_model "https://huggingface.co/facebook/seamless-m4t-medium/resolve/main/multitask_unity_medium.pt" "seamlessM4T_medium"
-download_model "https://huggingface.co/facebook/seamless-m4t-v2-large/resolve/main/spm_char_lang38_tc.model" "seamlessM4T_v2_large"
-download_model "https://huggingface.co/facebook/seamless-m4t-v2-large/resolve/main/seamlessM4T_v2_large.pt" "seamlessM4T_v2_large"
-download_model "https://huggingface.co/facebook/seamless-streaming/resolve/main/spm_char_lang38_tc.model" "seamless_expressivity"
-download_model "https://huggingface.co/facebook/seamless-streaming/resolve/main/seamless_streaming_monotonic_decoder.pt" "seamless_streaming_monotonic_decoder"
-download_model "https://huggingface.co/facebook/seamless-streaming/resolve/main/spm_char_lang38_tc.model" "seamless_streaming_unity"
-download_model "https://huggingface.co/facebook/seamless-streaming/resolve/main/seamless_streaming_unity.pt" "seamless_streaming_unity"
-download_model "https://huggingface.co/facebook/seamless-m4t-large/resolve/main/tokenizer.model" "unity_nllb-100"
-download_model "https://huggingface.co/facebook/seamless-m4t-medium/resolve/main/tokenizer.model" "unity_nllb-200"
-download_model "https://huggingface.co/facebook/seamless-m4t-vocoder/resolve/main/vocoder_36langs.pt" "vocoder_36langs"
-download_model "https://dl.fbaipublicfiles.com/seamless/models/vocoder_v2.pt" "vocoder_v2"
-download_model "https://dl.fbaipublicfiles.com/seamlessM4T/models/unit_extraction/xlsr2_1b_v2.pt" "xlsr2_1b_v2"
-download_model "https://huggingface.co/spaces/facebook/seamless-streaming/blob/main/seamless_server/models/Seamless/vad_s2st_sc_24khz_main.yaml" "Seamless"
-download_model "https://huggingface.co/spaces/facebook/seamless-streaming/blob/main/seamless_server/models/SeamlessStreaming/vad_s2st_sc_main.yaml" "SeamlessStreaming"
+# Read and download models from the YAML file
+download_models_from_yaml "$model_yaml"
 
 # Check if the user provided the path to the tar file
-if [ "$#" -eq 1 ]; then
+if [ -n "$model_tar" ]; then
     # Extract and place signed up models
-    extract_signed_up_models "$1"
+    extract_signed_up_models "$model_tar"
+
 else
     # Instructions for models that require signing up
     echo "To download the 'seamless_expressivity', 'vocoder_pretssel', and 'vocoder_pretssel_16khz' models, please follow these steps:"
