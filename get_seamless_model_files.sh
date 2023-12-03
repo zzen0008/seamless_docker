@@ -51,6 +51,7 @@ download_models_from_yaml() {
 
 
 # Function to extract and place signed up models
+# TODO: Add this to yaml spec as well
 extract_signed_up_models() {
     local tar_file=$1
     echo "Extracting models from $tar_file..."

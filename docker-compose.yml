@@ -6,10 +6,9 @@ services:
       context: ./
       dockerfile: Dockerfile
     volumes: 
-      - /home/zz/MLOPS/Applications/seamlessm4t/models:/home/user/app/seamless_server/models/Seamless
-      -  /home/zz/MLOPS/Applications/seamlessm4t/models/vad_s2st_sc_main.yaml:/home/user/app/seamless_server/models/SeamlessStreaming/vad_s2st_sc_main.yaml
-
+      - /home/zz/MLOPS/Applications/seamlessm4t/models:/home/user/app/seamless_server/models
     environment:
+      ## Place the PATH TO YOUR MODELS HERE
       - SEAMLESS_MODEL_PATH=/home/zz/MLOPS/Applications/seamlessm4t/models
     ports:
       - "7860:7860"
