@@ -16,7 +16,7 @@ Before proceeding with the setup, ensure that the following tools are installed 
 - Wget
 - yq (YAML processor) - Installation instructions can be found at [yq GitHub repository](https://github.com/mikefarah/yq)
 
-Additionally, you will need to download the `seamless-streaming` repository from Hugging Face into the project directory. It is crucial to clone the repository without downloading the large files, as they will be managed separately by the `get_seamless_model_files.sh` script.
+Additionally, you will need to download the `seamless-streaming` repository from Hugging Face into the project directory. It is recommended to clone the repository without downloading the large files, as they will be managed separately by the `get_seamless_model_files.sh` script.
 
 To clone the repository without large files, use the following command:
 
@@ -51,6 +51,26 @@ GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/spaces/facebook/seamless-
    ```
 
    The service will be available on port `7860` of your host machine.
+
+## Additional Model Files
+
+Some of the model files required by the Seamless Streaming Project are not publicly available for direct download and require signing up to access them. Follow the steps below to obtain these files:
+
+1. Visit the Meta AI model download page at [Meta AI Models and Libraries](https://ai.meta.com/resources/models-and-libraries/seamless-downloads/).
+
+2. Sign up with your details as required on the page.
+
+3. After signing up, you will receive an email with a link to download the `SeamlessExpressive.tar.tar` file, which contains the necessary models.
+
+4. Download the `SeamlessExpressive.tar.tar` file from the link provided in the email.
+
+5. Extract the models from the tar file using the following command:
+
+   ```bash
+   tar -xvf SeamlessExpressive.tar.tar
+   ```
+
+
 
 ## Notes
 
